@@ -12,6 +12,11 @@
 // These descriptions are intended to help you understand how the interface
 // will be used. See the RFC for how the protocol works.
 
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
+
 interface NodeInterface {
 
     /* These methods configure your node.
@@ -82,17 +87,116 @@ interface NodeInterface {
 // Complete this!
 public class Node implements NodeInterface {
 
+    private String nodeName;
+    private byte[] nodeHashId;
+    private DatagramSocket socket;
+    private int portNumber;
+
     public void setNodeName(String nodeName) throws Exception {
-	throw new Exception("Not implemented");
+        if(nodeName == null || !nodeName.startsWith("N:")){
+            throw new IllegalArgumentException("Node name must start with N:");
+        }
+        this.nodeName = nodeName;
+        this.nodeHashId = HashID.computeHashID(nodeName);
+
     }
 
     public void openPort(int portNumber) throws Exception {
-	throw new Exception("Not implemented");
+
+        if(nodeName == null) {
+          throw new IllegalStateException("SetNode first!");
+        }
+
+        if(portNumber < 20110 || portNumber > 20130) {
+            throw new IllegalArgumentException("Enter port number within range of 20110 - 20130");
+        }
+
+        this.socket = new DatagramSocket(portNumber);
+        this.portNumber = portNumber;
+
     }
 
     public void handleIncomingMessages(int delay) throws Exception {
-	throw new Exception("Not implemented");
+	    if (socket == null) {
+          throw new IllegalStateException("port not opened");
+        }
+
+        if (delay < 0) {
+            throw new IllegalArgumentException("Delay must be >= 0 ");
+        }
+
+        if (delay == 0) {
+            socket.setSoTimeout(0);
+        } else {
+            socket.setSoTimeout(delay);
+        }
+
+        byte[] buffer = new byte[65535];
+
+        while (true) {
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+            try{
+                socket.receive(packet);
+                handleSinglePacket(packet);
+
+
+            }
+        }
     }
+
+    private void handleSinglePacket(DatagramPacket packet) throws Exception {
+        String msg = new String(packet.getData(), 0 , packet.getLength(), StandardCharsets.UTF_8);
+
+        if (msg.length() < 4) return;
+        if (msg.charAt(2) != ' ') return;
+
+        String txid = msg.substring(0,2);
+        if (txid.charAt(0) == ' ' || txid.charAt(1) == ' ') return;
+
+        String rest = msg.substring(3);
+        if (rest.isEmpty()) return;
+
+        char messageType = rest.charAt(0);
+
+        switch (messageType) {
+            case 'G':
+                handleNameRequest(txid, packet);
+                break;
+
+            case 'w':
+                // add write logic later
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    private void handleNameRequest(String txid, DatagramPacket requestPacket) throws Exception {
+        String response = txid + 'H' + encodeCRNString(nodeName);
+        sendMessage(response, requestPacket.getAddress(), requestPacket.getPort());
+    }
+
+    private void sendMessage(String msg, InetAddress address, int port) throws Exception {
+        byte[] data = msg.getBytes(StandardCharsets.UTF_8);
+        DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+        socket.send(packet);
+    }
+
+    private String encodeCRNString(String s) {
+        if (s == null) {
+            s = "";
+        }
+        int spaces = 0;
+        for (int i = 0; i < s.length(); i ++) {
+            if (s.charAt(i) == ' ') {
+                spaces ++;
+            }
+        }
+        return spaces + " " + s + " ";
+    }
+
+
     
     public boolean isActive(String nodeName) throws Exception {
 	throw new Exception("Not implemented");
