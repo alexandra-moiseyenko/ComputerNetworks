@@ -15,6 +15,7 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 
 interface NodeInterface {
@@ -125,11 +126,7 @@ public class Node implements NodeInterface {
             throw new IllegalArgumentException("Delay must be >= 0 ");
         }
 
-        if (delay == 0) {
-            socket.setSoTimeout(0);
-        } else {
-            socket.setSoTimeout(delay);
-        }
+        socket.setSoTimeout(delay);
 
         byte[] buffer = new byte[65535];
 
@@ -138,7 +135,9 @@ public class Node implements NodeInterface {
             try{
                 socket.receive(packet);
                 handleSinglePacket(packet);
-
+            } catch (SocketException e) {
+                return;
+            } catch (Exception e) {
 
             }
         }
@@ -199,7 +198,8 @@ public class Node implements NodeInterface {
 
     
     public boolean isActive(String nodeName) throws Exception {
-	throw new Exception("Not implemented");
+	handleIncomingMessages(1);
+    String address =
     }
     
     public void pushRelay(String nodeName) throws Exception {
