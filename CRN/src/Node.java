@@ -513,5 +513,13 @@ public class Node implements NodeInterface {
         }
         return bestAddr;
     }
+    /** Resolve a node name to its address. */
+    private String resolveAddress(String name) throws Exception {
+        if (name.equals(nodeName)) {
+            return "127.0.0.1:" + portNumber;
+        }
+        return nameToAddress.get(name);
+    }
+
 
 }
