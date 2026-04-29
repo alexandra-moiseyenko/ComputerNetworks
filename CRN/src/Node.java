@@ -355,7 +355,7 @@ public class Node implements NodeInterface {
     }
 
     public void popRelay() throws Exception {
-        throw new Exception("Not implemented");
+        if (!relayStack.isEmpty()) relayStack.pop();
     }
 
     public boolean exists(String key) throws Exception {
