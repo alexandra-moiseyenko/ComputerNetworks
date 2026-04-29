@@ -351,7 +351,7 @@ public class Node implements NodeInterface {
     }
     
     public void pushRelay(String nodeName) throws Exception {
-	throw new Exception("Not implemented");
+        relayStack.push(nodeName);
     }
 
     public void popRelay() throws Exception {
