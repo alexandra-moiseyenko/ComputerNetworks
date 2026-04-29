@@ -276,6 +276,22 @@ public class Node implements NodeInterface {
         sendTo(response, req.getAddress(), req.getPort());
     }
 
+    private void handleCAS(String txid, String fields, DatagramPacket req) throws Exception {
+        String[] parts = parseCRNFields(fields, 3);
+        if (parts == null) return;
+        String key = parts[0];
+        String current = parts[1];
+        String next = parts[2];
+        boolean success = false;
+        String stored = localStore.get(key);
+        if (stored != null && stored.equals(current)) {
+            localStore.put(key, next);
+            success = true;
+        }
+        String response = txid + " C " + encodeCRNString(success ? "Y" : "N");
+        sendTo(response, req.getAddress(), req.getPort());
+    }
+
 
     
     public boolean isActive(String nodeName) throws Exception {
