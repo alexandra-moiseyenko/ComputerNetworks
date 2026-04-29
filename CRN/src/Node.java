@@ -257,6 +257,15 @@ public class Node implements NodeInterface {
         sendTo(response, req.getAddress(), req.getPort());
     }
 
+    private void handleRead(String txid, String fields, DatagramPacket req) throws Exception {
+        String[] parts = parseCRNFields(fields, 1);
+        if (parts == null) return;
+        String key = parts[0];
+        String value = localStore.get(key);
+        String response = txid + " r " + encodeCRNString(value != null ? value : "");
+        sendTo(response, req.getAddress(), req.getPort());
+    }
+
 
     
     public boolean isActive(String nodeName) throws Exception {
