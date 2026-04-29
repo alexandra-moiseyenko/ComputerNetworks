@@ -489,6 +489,29 @@ public class Node implements NodeInterface {
         return false;
     }
 
+// Routing helpers
 
-    
+    /**
+     * Find the address of the node responsible for storing a given key.
+     * Uses a simple strategy: find the node in our table whose hash is closest
+     * to the key's hash. Falls back to ourselves if the table is empty.
+     */
+    private String findResponsibleNode(String key) throws Exception {
+        byte[] keyHash = HashID.computeHashID(key);
+        String bestName = nodeName;
+        String bestAddr = "127.0.0.1:" + portNumber;
+        int bestDist = hashDistance(keyHash, nodeHashId);
+
+        for (Map.Entry<String, String> e : nameToAddress.entrySet()) {
+            byte[] h = HashID.computeHashID(e.getKey());
+            int d = hashDistance(keyHash, h);
+            if (d < bestDist) {
+                bestDist = d;
+                bestName = e.getKey();
+                bestAddr = e.getValue();
+            }
+        }
+        return bestAddr;
+    }
+
 }
