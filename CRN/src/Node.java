@@ -521,5 +521,19 @@ public class Node implements NodeInterface {
         return nameToAddress.get(name);
     }
 
+    /**
+     * XOR distance metric: returns the index of the first differing byte
+     * (higher = closer). Returns 0 for identical.
+     */
+    private int hashDistance(byte[] a, byte[] b) {
+        int len = Math.min(a.length, b.length);
+        for (int i = 0; i < len; i++) {
+            if (a[i] != b[i]) {
+                // Use XOR of first differing byte as tie-breaker
+                return i;
+            }
+        }
+        return len;
+    }
 
 }
