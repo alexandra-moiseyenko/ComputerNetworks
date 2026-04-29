@@ -248,6 +248,15 @@ public class Node implements NodeInterface {
         sendTo(sb.toString(), req.getAddress(), req.getPort());
     }
 
+    private void handleExists(String txid, String fields, DatagramPacket req) throws Exception {
+        String[] parts = parseCRNFields(fields, 1);
+        if (parts == null) return;
+        String key = parts[0];
+        String result = localStore.containsKey(key) ? "Y" : "N";
+        String response = txid + " e " + encodeCRNString(result);
+        sendTo(response, req.getAddress(), req.getPort());
+    }
+
 
     
     public boolean isActive(String nodeName) throws Exception {
