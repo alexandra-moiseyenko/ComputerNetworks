@@ -292,8 +292,28 @@ public class Node implements NodeInterface {
         sendTo(response, req.getAddress(), req.getPort());
     }
 
+    private void handleRelay(String txid, String fields, DatagramPacket req) throws Exception {
+        // Fields: <next-node-name> <message>
+        String[] parts = parseCRNFields(fields, 2);
+        if (parts == null) return;
+        String nextNode = parts[0];
+        String innerMsg = parts[1];
 
-    
+        String addr = nameToAddress.get(nextNode);
+        if (addr == null) {
+            // Can't relay – ack with failure
+            String response = txid + " v " + encodeCRNString("N");
+            sendTo(response, req.getAddress(), req.getPort());
+            return;
+        }
+        String[] hp = addr.split(":");
+        InetAddress ia = InetAddress.getByName(hp[0]);
+        int port = Integer.parseInt(hp[1]);
+        sendTo(innerMsg, ia, port);
+        String response = txid + " v " + encodeCRNString("Y");
+        sendTo(response, req.getAddress(), req.getPort());
+    }
+
     public boolean isActive(String nodeName) throws Exception {
 	handleIncomingMessages(1);
     String address =
