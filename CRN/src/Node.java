@@ -103,7 +103,6 @@ public class Node implements NodeInterface {
     }
 
     public void openPort(int portNumber) throws Exception {
-
         if(nodeName == null) {
           throw new IllegalStateException("SetNode first!");
         }
@@ -174,13 +173,30 @@ public class Node implements NodeInterface {
 
         switch (messageType) {
             case 'G':
-                handleNameRequest(txid, packet);
+                handleGetName(txid, packet);
                 break;
-
+            case 'W':
+                handleWriteAddress(txid, rest.substring(1), packet);
+                break;
+            case 'N':
+                handleNearest(txid, rest.substring(1), packet);
+                break;
+            case 'E':
+                handleExists(txid, rest.substring(1), packet);
+                break;
+            case 'R':
+                handleRead(txid, rest.substring(1), packet);
+                break;
             case 'w':
-                // add write logic later
+                handleWriteData(txid, rest.substring(1), packet);
                 break;
-
+            case 'c':
+                handleCAS(txid, rest.substring(1), packet);
+                break;
+            case 'V':
+                handleRelay(txid, rest.substring(1), packet);
+                break;
+            // lowercase responses are handled in the send/receive loops
             default:
                 break;
         }
