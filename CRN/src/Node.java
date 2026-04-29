@@ -12,10 +12,7 @@
 // These descriptions are intended to help you understand how the interface
 // will be used. See the RFC for how the protocol works.
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 
 interface NodeInterface {
@@ -92,6 +89,13 @@ public class Node implements NodeInterface {
     private byte[] nodeHashId;
     private DatagramSocket socket;
     private int portNumber;
+
+    private final Map<String, String> nameToAddress = new HashMap<>();
+    private final Map<String, String> localStore = new HashMap<>();
+    private final Deque<String> relayStack = new ArrayDeque<>();
+
+    private static final int TIMEOUT_MS = 2000;
+    private final Random random = new Random();
 
     public void setNodeName(String nodeName) throws Exception {
         if(nodeName == null || !nodeName.startsWith("N:")){
