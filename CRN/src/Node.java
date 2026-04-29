@@ -201,10 +201,9 @@ public class Node implements NodeInterface {
                 break;
         }
     }
-
-    private void handleNameRequest(String txid, DatagramPacket requestPacket) throws Exception {
-        String response = txid + 'H' + encodeCRNString(nodeName);
-        sendMessage(response, requestPacket.getAddress(), requestPacket.getPort());
+    private void handleGetName(String txid, DatagramPacket req) throws Exception {
+        String response = txid + " H " + encodeCRNString(nodeName);
+        sendTo(response, req.getAddress(), req.getPort());
     }
 
     private void sendMessage(String msg, InetAddress address, int port) throws Exception {
