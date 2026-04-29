@@ -425,7 +425,35 @@ public class Node implements NodeInterface {
     }
 
     public boolean write(String key, String value) throws Exception {
-	throw new Exception("Not implemented");
+        String addr = findResponsibleNode(key);
+        if (addr == null) return false;
+
+        String txid = randomTxid();
+        String msg = txid + " w " + encodeCRNString(key) + encodeCRNString(value);
+        InetAddress ia = parseAddress(addr);
+        int port = parsePort(addr);
+
+        sendViaRelayOrDirect(msg, ia, port);
+
+        long deadline = System.currentTimeMillis() + TIMEOUT_MS;
+        while (System.currentTimeMillis() < deadline) {
+            int remaining = (int)(deadline - System.currentTimeMillis());
+            if (remaining <= 0) break;
+            socket.setSoTimeout(remaining);
+            byte[] buffer = new byte[65535];
+            DatagramPacket pkt = new DatagramPacket(buffer, buffer.length);
+            try {
+                socket.receive(pkt);
+                String resp = new String(pkt.getData(), 0, pkt.getLength(), StandardCharsets.UTF_8);
+                if (resp.length() >= 4 && resp.startsWith(txid) && resp.charAt(2) == ' ' && resp.charAt(3) == 'W') {
+                    return true;
+                }
+                handleSinglePacket(pkt);
+            } catch (SocketTimeoutException e) {
+                break;
+            }
+        }
+        return false;
     }
 
     public boolean CAS(String key, String currentValue, String newValue) throws Exception {
