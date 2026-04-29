@@ -2,9 +2,9 @@
 // Coursework 2024/2025
 //
 // Submission by
-//  YOUR_NAME_GOES_HERE
-//  YOUR_STUDENT_ID_NUMBER_GOES_HERE
-//  YOUR_EMAIL_GOES_HERE
+//  Alexandra Moiseyenko
+//  230065253
+//  alexandra.moiseyenko@city.ac.uk
 
 
 // DO NOT EDIT starts
