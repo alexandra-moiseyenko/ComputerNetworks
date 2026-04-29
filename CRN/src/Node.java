@@ -535,5 +535,82 @@ public class Node implements NodeInterface {
         }
         return len;
     }
+    /**
+     * Send a message via the relay stack (if non-empty) or directly.
+     * The relay stack: bottom = first relay, top = innermost relay.
+     * We wrap the message from outermost relay outward.
+     */
+    private void sendViaRelayOrDirect(String msg, InetAddress dest, int destPort) throws Exception {
+        if (relayStack.isEmpty()) {
+            sendTo(msg, dest, destPort);
+            return;
+        }
+
+        // Build relay chain: wrap message in V relay envelopes
+        // relayStack.peek() is top (last pushed = first to contact)
+        // We need to relay through the stack from bottom to top
+        // Actually, stack: push A then push B means B is on top.
+        // The relay chain: this node → A → B → dest
+        // So we wrap: to A with payload "to B with payload 'msg to dest'"
+        // Build as an array from bottom to top
+        String[] relays = relayStack.toArray(new String[0]);
+        // toArray on ArrayDeque gives top-first order (LIFO), so reverse for bottom-first
+        // Actually Deque.toArray() is unspecified - let's iterate properly
+        String[] ordered = new String[relays.length];
+        int idx = 0;
+        for (String s : relayStack) {
+            ordered[idx++] = s; // ArrayDeque iterator goes from head (top of stack)
+        }
+        // ordered[0] = top of stack (last pushed, contacted first)
+        // ordered[last] = bottom of stack (first pushed, contacted last before dest)
+        // Chain: this -> ordered[0] -> ordered[1] -> ... -> ordered[last] -> dest
+
+        // Innermost envelope: message to dest
+        // We don't relay the final hop via V; dest receives the real message
+        // So: wrap msg for dest inside relay chain from innermost outward
+        // ordered[last] sends to dest, so wrap: V <dest-name> <msg>
+        // Then wrap that for ordered[last-1], etc.
+        // But we need the dest node name... we only have the address.
+        // For simplicity, send directly since we have the address.
+        // Relay is: ordered[0] relays to ordered[1] ... to dest
+        // We send to ordered[0]'s address with V-wrapped message
+
+        // Find address of first relay (ordered[0])
+        String firstRelayAddr = nameToAddress.get(ordered[0]);
+        if (firstRelayAddr == null) {
+            // Can't relay, send direct
+            sendTo(msg, dest, destPort);
+            return;
+        }
+
+        // Build the fully wrapped message
+        String wrapped = msg;
+        // Wrap from the destination back to the first relay
+        // Destination address string
+        String destAddrStr = dest.getHostAddress() + ":" + destPort;
+        // We'll encode the target address as the node identifier for relay
+        // Wrap: for each relay from innermost (last) to outermost (first)
+        // Inner relay sends to dest directly
+        // For now: single relay level - send V <nextAddr> <wrappedMsg> to first relay
+        // Multi-hop: chain V envelopes
+        // Final hop: the last relay node will send 'msg' to dest
+        String innerPayload = msg;
+        // Wrap from ordered[last] toward ordered[0]
+        for (int i = ordered.length - 1; i >= 0; i--) {
+            String nextAddr;
+            if (i == ordered.length - 1) {
+                nextAddr = destAddrStr;
+            } else {
+                nextAddr = nameToAddress.get(ordered[i + 1]);
+                if (nextAddr == null) nextAddr = destAddrStr;
+            }
+            String innerTxid = randomTxid();
+            innerPayload = innerTxid + " V " + encodeCRNString(ordered[i]) + encodeCRNString(innerPayload);
+        }
+
+        InetAddress relayAddr = parseAddress(firstRelayAddr);
+        int relayPort = parsePort(firstRelayAddr);
+        sendTo(innerPayload, relayAddr, relayPort);
+    }
 
 }
