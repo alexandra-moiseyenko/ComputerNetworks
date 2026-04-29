@@ -206,10 +206,14 @@ public class Node implements NodeInterface {
         sendTo(response, req.getAddress(), req.getPort());
     }
 
-    private void sendMessage(String msg, InetAddress address, int port) throws Exception {
-        byte[] data = msg.getBytes(StandardCharsets.UTF_8);
-        DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
-        socket.send(packet);
+    private void handleWriteAddress(String txid, String fields, DatagramPacket req) throws Exception {
+        String[] parts = parseCRNFields(fields, 2);
+        if (parts == null) return;
+        String name = parts[0];
+        String address = parts[1];
+        nameToAddress.put(name, address);
+        String response = txid + " w " + encodeCRNString(name);
+        sendTo(response, req.getAddress(), req.getPort());
     }
 
     private String encodeCRNString(String s) {
