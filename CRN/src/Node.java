@@ -216,17 +216,36 @@ public class Node implements NodeInterface {
         sendTo(response, req.getAddress(), req.getPort());
     }
 
-    private String encodeCRNString(String s) {
-        if (s == null) {
-            s = "";
-        }
-        int spaces = 0;
-        for (int i = 0; i < s.length(); i ++) {
-            if (s.charAt(i) == ' ') {
-                spaces ++;
+    private void handleNearest(String txid, String fields, DatagramPacket req) throws Exception {
+        String[] parts = parseCRNFields(fields, 1);
+        if (parts == null) return;
+        String targetHashHex = parts[0];
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(txid).append(" n ");
+
+        String myAddr = "127.0.0.1:" + portNumber;
+        sb.append(encodeCRNString(nodeName)).append(encodeCRNString(myAddr));
+
+        int added = 0;
+        byte[] targetHash = hexToBytes(targetHashHex);
+        String closestName = null;
+        String closestAddr = null;
+        int closestDist = Integer.MAX_VALUE;
+        for (Map.Entry<String, String> e : nameToAddress.entrySet()) {
+            byte[] h = HashID.computeHashID(e.getKey());
+            int d = hashDistance(targetHash, h);
+            if (d < closestDist) {
+                closestDist = d;
+                closestName = e.getKey();
+                closestAddr = e.getValue();
             }
         }
-        return spaces + " " + s + " ";
+        if (closestName != null) {
+            sb.append(encodeCRNString(closestName)).append(encodeCRNString(closestAddr));
+        }
+
+        sendTo(sb.toString(), req.getAddress(), req.getPort());
     }
 
 
