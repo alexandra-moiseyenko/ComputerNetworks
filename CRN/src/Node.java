@@ -135,11 +135,26 @@ public class Node implements NodeInterface {
             try{
                 socket.receive(packet);
                 handleSinglePacket(packet);
+            } catch (SocketTimeoutException e) {
+                return;
             } catch (SocketException e) {
                 return;
             } catch (Exception e) {
-
+                // Malformed packet – ignore and keep listening
             }
+        }
+    }
+
+    private boolean receiveOne(int timeoutMs) throws Exception {
+        socket.setSoTimeout(timeoutMs);
+        byte[] buffer = new byte[65535];
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+        try {
+            socket.receive(packet);
+            handleSinglePacket(packet);
+            return true;
+        } catch (SocketTimeoutException e) {
+            return false;
         }
     }
 
