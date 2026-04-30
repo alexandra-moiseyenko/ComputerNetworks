@@ -621,5 +621,11 @@ public class Node implements NodeInterface {
         int relayPort = parsePort(firstRelayAddr);
         sendTo(innerPayload, relayAddr, relayPort);
     }
+    private void sendTo(String msg, InetAddress address, int port) throws Exception {
+        byte[] data = msg.getBytes(StandardCharsets.UTF_8);
+        DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+        socket.send(packet);
+    }
+
 
 }
