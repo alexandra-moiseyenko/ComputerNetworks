@@ -636,5 +636,51 @@ public class Node implements NodeInterface {
         return spaces + " " + s + " ";
     }
 
+    private String[] parseCRNFields(String s, int n) {
+        String[] results = new String[n];
+        int pos = 0;
+        for (int i = 0; i < n; i++) {
+            // skip leading space if present
+            if (pos < s.length() && s.charAt(pos) == ' ') pos++;
+            if (pos >= s.length()) return null;
+
+            // read the space count number
+            int numStart = pos;
+            while (pos < s.length() && s.charAt(pos) != ' ') pos++;
+            if (pos >= s.length()) return null;
+            int spaceCount;
+            try {
+                spaceCount = Integer.parseInt(s.substring(numStart, pos));
+            } catch (NumberFormatException e) {
+                return null;
+            }
+            pos++; // skip the space after the number
+
+            // the content is spaceCount spaces + spaceCount+1 non-space segments
+            // total characters = length until we've consumed spaceCount spaces and end on ' '
+            // read until we have consumed spaceCount internal spaces, then stop at next ' '
+            int spacesLeft = spaceCount;
+            StringBuilder sb = new StringBuilder();
+            while (pos < s.length()) {
+                char c = s.charAt(pos);
+                if (c == ' ') {
+                    if (spacesLeft > 0) {
+                        sb.append(' ');
+                        spacesLeft--;
+                        pos++;
+                    } else {
+                        pos++; // terminating space
+                        break;
+                    }
+                } else {
+                    sb.append(c);
+                    pos++;
+                }
+            }
+            results[i] = sb.toString();
+        }
+        return results;
+    }
+
 
 }
