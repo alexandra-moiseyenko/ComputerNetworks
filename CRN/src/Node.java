@@ -689,5 +689,10 @@ public class Node implements NodeInterface {
         return "" + c1 + c2;
     }
 
+    private InetAddress parseAddress(String addr) throws Exception {
+        int colon = addr.lastIndexOf(':');
+        return InetAddress.getByName(addr.substring(0, colon));
+    }
+
 
 }
