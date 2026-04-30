@@ -627,5 +627,14 @@ public class Node implements NodeInterface {
         socket.send(packet);
     }
 
+    private String encodeCRNString(String s) {
+        if (s == null) s = "";
+        int spaces = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == ' ') spaces++;
+        }
+        return spaces + " " + s + " ";
+    }
+
 
 }
