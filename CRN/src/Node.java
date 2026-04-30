@@ -682,5 +682,12 @@ public class Node implements NodeInterface {
         return results;
     }
 
+    private String randomTxid() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        char c1 = chars.charAt(random.nextInt(chars.length()));
+        char c2 = chars.charAt(random.nextInt(chars.length()));
+        return "" + c1 + c2;
+    }
+
 
 }
