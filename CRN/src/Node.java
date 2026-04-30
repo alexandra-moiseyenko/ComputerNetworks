@@ -694,5 +694,10 @@ public class Node implements NodeInterface {
         return InetAddress.getByName(addr.substring(0, colon));
     }
 
+    private int parsePort(String addr) {
+        int colon = addr.lastIndexOf(':');
+        return Integer.parseInt(addr.substring(colon + 1));
+    }
+
 
 }
